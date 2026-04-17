@@ -1,5 +1,8 @@
 # WebP Weight Reducer
 
+## Disclaimer: This tool is provided for educational and utility purposes. The author is not responsible for any misuse or damages resulting from the use of this software.
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **WebP Weight Reducer** is a fast and secure web tool designed to convert JPG/PNG images into WebP format directly within your browser. Optimize your image file sizes for web performance in seconds without compromising privacy.
@@ -31,4 +34,5 @@ cd webp-weight-reducer
 
 # Open Webp-converter.html in your browser
 
-## Disclaimer: This tool is provided for educational and utility purposes. The author is not responsible for any misuse or damages resulting from the use of this software.
+
+
