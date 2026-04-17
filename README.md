@@ -30,3 +30,6 @@ git clone [https://github.com/your-username/webp-weight-reducer.git](https://git
 cd webp-weight-reducer
 
 # Open Webp-converter.html in your browser
+
+**## Disclaimer: This tool is provided for educational and utility purposes. The author is not responsible for any misuse or damages resulting from the use of this software.
+**
