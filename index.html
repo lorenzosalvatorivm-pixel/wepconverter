@@ -1,267 +1,359 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it" class="h-full bg-slate-950">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk WebP Converter: Batch Image Optimizer & Compression Tool - </title>
-    <!-- JSZip Library Loading -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --success: #10b981;
-            --error: #f43f5e;
-            --accent: #f59e0b;
+    <title>WebP Weight Reducer Ultra - Batch Multi-Format Image Optimizer</title>
+    
+    <!-- Tailwind CSS for modern responsive UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                        }
+                    }
+                }
+            }
         }
+    </script>
+    
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for modern aesthetic -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- JSZip Library for packaging outputs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- UTIF.js (TIFF Decoder) -->
+    <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js"></script>
+    <!-- HEIC2ANY (HEIC/HEIF Decoder) -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+    <style>
+        body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+        /* Custom scrollbar styling for high-fidelity look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
+        ::-webkit-scrollbar-track {
+            background: #090d16;
         }
-
-        .card {
-            background: var(--card-bg);
-            padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border);
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
         }
-
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
         }
-
-        header h1 {
-            font-size: 2.2rem;
-            background: linear-gradient(to right, #fbbf24, #f59e0b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+        /* Glassmorphic elements */
+        .glass-panel {
+            background: rgba(13, 20, 35, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: 20px;
-            padding: 3rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-            background: rgba(30, 41, 59, 0.5);
+        /* Glowing animations */
+        @keyframes spin-glow {
+            0% { transform: rotate(0deg); filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.4)); }
+            100% { transform: rotate(360deg); filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.8)); }
         }
-
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--accent);
-            background: rgba(245, 158, 11, 0.05);
-        }
-
-        #fileInput { display: none; }
-
-        .controls {
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .control-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .presets {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .preset-btn {
-            flex: 1;
-            padding: 6px;
-            font-size: 0.75rem;
-            background: var(--border);
-            border: none;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .preset-btn:hover { background: #475569; }
-
-        input[type="range"] {
-            width: 100%;
-            accent-color: var(--accent);
-        }
-
-        .preview-list {
-            margin-top: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .preview-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(51, 65, 85, 0.3);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-        }
-
-        .preview-item img {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .file-info { flex-grow: 1; min-width: 0; }
-        .file-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .file-meta { font-size: 0.8rem; color: var(--text-muted); }
-
-        .btn {
-            padding: 0.7rem 1.2rem;
-            border-radius: 10px;
-            border: none;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-primary:hover { transform: scale(1.02); background: #fbbf24; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: white; }
-        .btn-outline:hover { background: rgba(255,255,255,0.05); }
-
-        .reduction-positive { color: var(--success); font-weight: bold; }
-        .reduction-negative { color: var(--error); }
-
-        .hidden { display: none !important; }
-
-        #globalActions {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        /* ZIP loading animation */
-        .loading-spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .glow-spinner {
+            animation: spin-glow 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
     </style>
 </head>
-<body>
-
-    <div class="container">
-        <div class="card">
-            <header>
-                <h1>WebP Weight <span style="font-weight: 300;">Reducer</span></h1>
-                <p>Convert and download everything in a single ZIP archive</p>
-            </header>
-
-            <div id="dropZone" class="upload-area">
-                <p>Drag and drop heavy KB images here</p>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">Supports JPG and PNG</span>
-                <input type="file" id="fileInput" accept="image/png, image/jpeg" multiple>
+<body class="min-h-full flex flex-col items-center justify-start text-slate-100 py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    
+    <!-- Main Outer Container -->
+    <div class="w-full max-w-6xl space-y-8">
+        
+        <!-- Header Section -->
+        <header class="text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-panel text-xs font-semibold text-brand-500 tracking-wide uppercase border border-brand-500/20 shadow-[0_0_20px_rgba(139,92,246,0.15)]">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping"></span>
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 10 Formati Supportati: HEIC e TIFF Multipagina Inclusi
             </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-purple-400 to-amber-300 bg-clip-text text-transparent">
+                WebP Weight <span class="font-light">Reducer Ultra</span>
+            </h1>
+            <p class="text-slate-400 max-w-3xl mx-auto text-sm sm:text-base leading-relaxed">
+                Convertitore batch ultra-veloce per ottimizzare <strong class="text-white">PNG, JPG, TIFF, HEIC/HEIF, BMP, GIF, SVG, AVIF, ICO e WEBP</strong>. Riduzione locale istantanea protetta al 100% senza caricamenti su server esterni.
+            </p>
+        </header>
 
-            <div class="controls">
-                <div class="control-grid">
-                    <div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <label style="font-size: 0.9rem; font-weight: 600;">Desired Quality</label>
-                            <span id="qualityDisplay" style="color: var(--accent); font-weight: 800;">75%</span>
+        <!-- Main Workspace Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Column: Inputs & Compression Controls -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Advanced Dropzone -->
+                <div id="dropZone" class="glass-panel p-8 rounded-3xl text-center cursor-pointer transition-all duration-300 hover:border-brand-500/50 hover:bg-slate-900/30 group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    <input type="file" id="fileInput" accept="image/png, image/jpeg, image/tiff, image/x-tiff, .tif, .tiff, image/heic, image/heif, .heic, .heif, image/webp, image/bmp, image/gif, image/svg+xml, .svg, image/avif, image/x-icon, .ico" multiple class="hidden">
+                    
+                    <div class="space-y-4 relative z-10">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-900/80 flex items-center justify-center border border-slate-800 group-hover:scale-110 transition-transform duration-300 group-hover:border-brand-500/30 shadow-inner">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand-500"></i>
                         </div>
-                        <input type="range" id="qualityRange" min="0.1" max="0.95" step="0.05" value="0.75">
-                        <div class="presets">
-                            <button class="preset-btn" onclick="setQuality(0.3)">Min Size (30%)</button>
-                            <button class="preset-btn" onclick="setQuality(0.6)">Balanced (60%)</button>
-                            <button class="preset-btn" onclick="setQuality(0.85)">High (85%)</button>
+                        <div>
+                            <p class="text-base font-semibold group-hover:text-brand-500 transition-colors">Trascina qui le tue immagini</p>
+                            <p class="text-xs text-slate-500 mt-1">Trascina singoli file, selezioni multiple o cartelle</p>
+                        </div>
+                        
+                        <!-- Mini Grid of Supported Formats Badges -->
+                        <div class="pt-3 border-t border-slate-900/60 grid grid-cols-5 gap-1.5 max-w-xs mx-auto">
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-slate-400 font-bold border border-slate-850">PNG</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-slate-400 font-bold border border-slate-850">JPG</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-amber-500 font-bold border border-amber-500/10">TIFF</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-pink-500 font-bold border border-pink-500/10">HEIC</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-violet-400 font-bold border border-violet-500/10">WEBP</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-emerald-500 font-bold border border-emerald-500/10">BMP</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-teal-400 font-bold border border-teal-500/10">GIF</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-cyan-400 font-bold border border-cyan-500/10">SVG</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-rose-400 font-bold border border-rose-500/10">AVIF</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[9px] text-yellow-500 font-bold border border-yellow-500/10">ICO</span>
+                        </div>
+                        
+                        <span class="inline-block text-xs text-brand-500 font-semibold underline group-hover:text-brand-600 mt-1">oppure Sfoglia i File dal computer</span>
+                    </div>
+                </div>
+
+                <!-- Parameters Controller -->
+                <div class="glass-panel p-6 rounded-3xl space-y-6">
+                    <div class="flex items-center gap-2 border-b border-slate-800/80 pb-3">
+                        <i class="fa-solid fa-sliders text-brand-500 text-lg"></i>
+                        <h2 class="font-bold text-slate-200">Parametri di Ottimizzazione</h2>
+                    </div>
+
+                    <!-- Quality Settings -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <label class="font-medium text-slate-300">Qualità Desiderata</label>
+                            <span id="qualityDisplay" class="text-brand-400 font-extrabold text-lg">75%</span>
+                        </div>
+                        <input type="range" id="qualityRange" min="0.05" max="1.0" step="0.05" value="0.75" class="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                        <!-- Presets -->
+                        <div class="grid grid-cols-4 gap-1.5 pt-1">
+                            <button onclick="setQuality(0.35)" class="py-1 px-1 text-[10px] font-semibold rounded bg-slate-900 hover:bg-slate-850 transition text-slate-400 hover:text-white border border-slate-800">Min (35%)</button>
+                            <button onclick="setQuality(0.65)" class="py-1 px-1 text-[10px] font-semibold rounded bg-slate-900 hover:bg-slate-850 transition text-slate-400 hover:text-white border border-slate-800">Bilanciat (65%)</button>
+                            <button onclick="setQuality(0.85)" class="py-1 px-1 text-[10px] font-semibold rounded bg-slate-900 hover:bg-slate-850 transition text-slate-400 hover:text-white border border-slate-800">Qualità (85%)</button>
+                            <button onclick="setQuality(1.0)" class="py-1 px-1 text-[10px] font-semibold rounded bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 transition">Max (100%)</button>
                         </div>
                     </div>
-                    <div>
-                        <label style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 8px;">Extra Options</label>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
-                                <input type="checkbox" id="resizeToggle" checked> Resize if > 1920px
+
+                    <!-- Max Dimension Constraints -->
+                    <div class="space-y-3 pt-4 border-t border-slate-900/60">
+                        <div class="flex items-center justify-between">
+                            <label for="resizeToggle" class="text-sm font-medium text-slate-300 cursor-pointer flex items-center gap-2 select-none">
+                                <input type="checkbox" id="resizeToggle" checked class="rounded border-slate-800 bg-slate-900 text-brand-500 focus:ring-brand-500/50 w-4 h-4">
+                                Limita risoluzione massima (Scaling)
                             </label>
-                            <p style="margin-top: 5px;">* Resizing helps reduce weight drastically.</p>
+                        </div>
+                        <div id="resizeSettings" class="grid grid-cols-2 gap-3 transition-opacity duration-200">
+                            <div>
+                                <label class="text-[10px] text-slate-500 font-bold block mb-1 uppercase tracking-wider">Max Larghezza (px)</label>
+                                <input type="number" id="maxWidth" value="1920" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-500/50">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-500 font-bold block mb-1 uppercase tracking-wider">Max Altezza (px)</label>
+                                <input type="number" id="maxHeight" value="1920" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-500/50">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 italic mt-1">* Vettoriali come SVG verranno esportati adattandosi a queste proporzioni.</p>
+                    </div>
+
+                    <!-- Alpha channel Transparency & Custom Colors -->
+                    <div class="space-y-3 pt-4 border-t border-slate-900/60">
+                        <label class="text-sm font-medium text-slate-300 block">Canale Trasparenza (Alpha)</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <select id="alphaOption" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-brand-500/50">
+                                <option value="keep">Mantieni trasparenza (Alpha)</option>
+                                <option value="white">Sfondo Bianco</option>
+                                <option value="black">Sfondo Nero</option>
+                                <option value="custom">Colore Personalizzato</option>
+                            </select>
+                            
+                            <!-- Custom Color Picker Hidden by Default -->
+                            <div id="customColorWrapper" class="hidden flex items-center gap-2">
+                                <input type="color" id="customColorPicker" value="#6366f1" class="w-8 h-8 rounded-lg bg-transparent border-0 cursor-pointer">
+                                <input type="text" id="customColorText" value="#6366f1" placeholder="#6366f1" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none text-center font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output File Naming Rules -->
+                    <div class="space-y-3 pt-4 border-t border-slate-900/60">
+                        <label class="text-sm font-medium text-slate-300 block">Ridenominazione File Output</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] text-slate-500 font-bold block mb-1 uppercase">Prefisso</label>
+                                <input type="text" id="namePrefix" placeholder="es. opt_" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-500/50">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-500 font-bold block mb-1 uppercase">Suffisso</label>
+                                <input type="text" id="nameSuffix" placeholder="es. _compressed" class="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-500/50">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="fileList" class="preview-list"></div>
+            <!-- Right Column: Queue, Stats & Actions -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Live Cumulative Statistics Panel -->
+                <div id="statsPanel" class="glass-panel p-6 rounded-3xl hidden grid-cols-2 sm:grid-cols-4 gap-4 bg-gradient-to-r from-brand-500/10 via-slate-900/40 to-transparent border-brand-500/20 shadow-lg">
+                    <div class="space-y-1">
+                        <span class="text-[10px] text-slate-500 font-bold tracking-wider uppercase block">Immagini in Coda</span>
+                        <div id="statTotalCount" class="text-2xl font-extrabold text-slate-100 flex items-center gap-1.5">
+                            <span class="value">0</span>
+                            <span class="text-xs text-slate-500 font-normal">file</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[10px] text-slate-500 font-bold tracking-wider uppercase block">Peso Iniziale</span>
+                        <div id="statOriginalSize" class="text-2xl font-extrabold text-slate-100 font-mono">0 KB</div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[10px] text-slate-400 font-bold tracking-wider uppercase block">Nuovo Peso WebP</span>
+                        <div id="statNewSize" class="text-2xl font-extrabold text-brand-400 font-mono">0 KB</div>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[10px] text-slate-500 font-bold tracking-wider uppercase block font-semibold text-emerald-500">Risparmio Spazio</span>
+                        <div id="statSavings" class="text-2xl font-extrabold text-emerald-400 font-mono">0%</div>
+                    </div>
+                </div>
 
-            <div id="globalActions" class="hidden">
-                <button id="clearAllBtn" class="btn btn-outline">Remove All</button>
-                <button id="convertAllBtn" class="btn btn-primary">Optimize All</button>
-                <button id="downloadZipBtn" class="btn btn-success hidden">
-                    <span>Download ZIP Archive</span>
-                </button>
+                <!-- Queue Panel Container -->
+                <div class="glass-panel p-6 rounded-3xl space-y-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                        <h2 class="font-bold text-slate-200 flex items-center gap-2">
+                            <span>Coda di Elaborazione</span>
+                            <span id="queueCountBadge" class="bg-brand-500/10 text-brand-400 text-xs px-2.5 py-0.5 rounded-full border border-brand-500/20 font-bold hidden">0</span>
+                        </h2>
+                        
+                        <!-- Queue Controls (Filters) -->
+                        <div id="queueFilterActions" class="hidden flex items-center gap-2 w-full sm:w-auto">
+                            <select id="queueFilter" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 focus:outline-none">
+                                <option value="all">Filtra: Tutti i file</option>
+                                <option value="pending">Filtra: Solo in attesa</option>
+                                <option value="converted">Filtra: Solo ottimizzati</option>
+                            </select>
+                            <button id="clearAllBtn" class="px-2.5 py-1 text-[11px] text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-850 transition">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Svuota
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Queue Empty State -->
+                    <div id="emptyState" class="py-16 text-center text-slate-500 space-y-3">
+                        <div class="w-16 h-16 rounded-full bg-slate-900/60 border border-slate-850 flex items-center justify-center mx-auto text-slate-700">
+                            <i class="fa-solid fa-images text-2xl"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm font-medium text-slate-400">Nessun file inserito in coda.</p>
+                            <p class="text-xs text-slate-600 max-w-xs mx-auto">Trascina le tue immagini qui a sinistra o fai clic per caricare ed iniziare la conversione.</p>
+                        </div>
+                    </div>
+
+                    <!-- Files Dynamic Queue List Container -->
+                    <div id="fileList" class="max-h-[500px] overflow-y-auto space-y-3 pr-1"></div>
+
+                    <!-- Action Control Panel Footer -->
+                    <div id="actionFooter" class="hidden pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <button id="convertAllBtn" class="w-full sm:w-auto px-6 py-3 bg-brand-500 hover:bg-brand-600 active:transform active:scale-[0.98] transition-all rounded-xl font-bold text-white text-sm shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-300"></i>
+                            <span>Ottimizza Coda Completa</span>
+                        </button>
+                        
+                        <button id="downloadZipBtn" class="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 active:transform active:scale-[0.98] transition-all rounded-xl font-bold text-white text-sm shadow-lg shadow-emerald-500/20 hidden flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-zipper"></i>
+                            <span>Esporta Archivio ZIP</span>
+                        </button>
+                    </div>
+                </div>
             </div>
+
         </div>
+
+        <!-- Formats Technical Guidelines Section -->
+        <footer class="glass-panel p-6 rounded-3xl space-y-4">
+            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-brand-500"></i>
+                <span>Come gestiamo i formati avanzati?</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-400 leading-relaxed">
+                <div class="space-y-1.5">
+                    <h4 class="font-bold text-slate-300 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span> Apple HEIC / HEIF
+                    </h4>
+                    <p>Tramite <code>heic2any.js</code> decodifichiamo in locale i formati ad alta efficienza di iOS. Le raffiche o burst fotografici vengono estratti e visualizzati singolarmente per permetterti di ottimizzare ogni scatto.</p>
+                </div>
+                <div class="space-y-1.5">
+                    <h4 class="font-bold text-slate-300 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> TIFF Multipagina
+                    </h4>
+                    <p>Leggiamo i tag e le strutture dei file TIFF mediante <code>UTIF.js</code>. Se carichi un file TIFF multipagina, la coda creerà elementi indipendenti per ogni pagina con un contatore dedicato.</p>
+                </div>
+                <div class="space-y-1.5">
+                    <h4 class="font-bold text-slate-300 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> Grafica Vettoriale SVG
+                    </h4>
+                    <p>Gli SVG vengono analizzati per rilevare l'aspect ratio delle loro coordinate originali e rasterizzati con estrema precisione in pixel alla risoluzione massima impostata nei controlli.</p>
+                </div>
+            </div>
+        </footer>
+
     </div>
 
     <script>
+        // Core elements
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const fileList = document.getElementById('fileList');
         const qualityRange = document.getElementById('qualityRange');
         const qualityDisplay = document.getElementById('qualityDisplay');
         const resizeToggle = document.getElementById('resizeToggle');
+        const resizeSettings = document.getElementById('resizeSettings');
         const convertAllBtn = document.getElementById('convertAllBtn');
         const downloadZipBtn = document.getElementById('downloadZipBtn');
         const clearAllBtn = document.getElementById('clearAllBtn');
-        const globalActions = document.getElementById('globalActions');
+        const emptyState = document.getElementById('emptyState');
+        const actionFooter = document.getElementById('actionFooter');
+        const statsPanel = document.getElementById('statsPanel');
+        const alphaOption = document.getElementById('alphaOption');
+        const customColorWrapper = document.getElementById('customColorWrapper');
+        const customColorPicker = document.getElementById('customColorPicker');
+        const customColorText = document.getElementById('customColorText');
+        const namePrefix = document.getElementById('namePrefix');
+        const nameSuffix = document.getElementById('nameSuffix');
+        const queueCountBadge = document.getElementById('queueCountBadge');
+        const queueFilter = document.getElementById('queueFilter');
+        const queueFilterActions = document.getElementById('queueFilterActions');
+
+        // Stats UI selectors
+        const statTotalCount = document.getElementById('statTotalCount');
+        const statOriginalSize = document.getElementById('statOriginalSize');
+        const statNewSize = document.getElementById('statNewSize');
+        const statSavings = document.getElementById('statSavings');
 
         let queue = [];
 
+        // Quality controllers
         function setQuality(val) {
             qualityRange.value = val;
             qualityDisplay.textContent = Math.round(val * 100) + '%';
@@ -271,159 +363,615 @@
             qualityDisplay.textContent = Math.round(e.target.value * 100) + '%';
         });
 
-        dropZone.addEventListener('click', () => fileInput.click());
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-            dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+        // Toggle resizing limits
+        resizeToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                resizeSettings.style.opacity = '1';
+                resizeSettings.style.pointerEvents = 'auto';
+            } else {
+                resizeSettings.style.opacity = '0.3';
+                resizeSettings.style.pointerEvents = 'none';
+            }
         });
-        dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-        function handleFiles(files) {
-            Array.from(files).forEach(file => {
-                if (!file.type.match('image.*')) return;
-                const item = { 
-                    id: crypto.randomUUID(), 
-                    file, 
-                    converted: false, 
-                    url: URL.createObjectURL(file),
-                    resultBlob: null,
-                    resultName: null
-                };
-                queue.push(item);
-                renderItem(item);
-            });
+        // Custom color selection visibility
+        alphaOption.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') {
+                customColorWrapper.classList.remove('hidden');
+                customColorWrapper.classList.add('flex');
+            } else {
+                customColorWrapper.classList.add('hidden');
+                customColorWrapper.classList.remove('flex');
+            }
+        });
+
+        customColorPicker.addEventListener('input', (e) => {
+            customColorText.value = e.target.value;
+        });
+        customColorText.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                customColorPicker.value = e.target.value;
+            }
+        });
+
+        // Trigger upload click
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Standard Drag and Drop Events
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('border-brand-500', 'bg-slate-900/40', 'scale-[0.99]');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('border-brand-500', 'bg-slate-900/40', 'scale-[0.99]');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        queueFilter.addEventListener('change', () => {
+            filterQueueDisplay();
+        });
+
+        /**
+         * Checks the filename extension to identify advanced or native image types
+         */
+        function getFormatCategory(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            if (ext === 'tif' || ext === 'tiff') return 'TIFF';
+            if (ext === 'heic' || ext === 'heif') return 'HEIC';
+            if (ext === 'svg') return 'SVG';
+            if (['jpg', 'jpeg'].includes(ext)) return 'JPEG';
+            if (ext === 'png') return 'PNG';
+            if (ext === 'webp') return 'WEBP';
+            if (ext === 'bmp') return 'BMP';
+            if (ext === 'gif') return 'GIF';
+            if (ext === 'avif') return 'AVIF';
+            if (ext === 'ico') return 'ICO';
+            return 'UNKNOWN';
+        }
+
+        /**
+         * Decodes standard and multi-page TIFF into Canvas via UTIF
+         */
+        async function getTiffCanvas(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const ifds = UTIF.decode(arrayBuffer);
+            if (!ifds || ifds.length === 0) {
+                throw new Error("Impossibile decodificare i tag TIFF.");
+            }
+            UTIF.decodeImage(arrayBuffer, ifds[0]);
+            const timage = ifds[0];
+            const rgba = UTIF.toRGBA8(timage);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = timage.width;
+            canvas.height = timage.height;
+            const ctx = canvas.getContext('2d');
+            const imageData = new ImageData(new Uint8ClampedArray(rgba), timage.width, timage.height);
+            ctx.putImageData(imageData, 0, 0);
+            return { canvas, count: ifds.length, ifds, arrayBuffer };
+        }
+
+        /**
+         * Processes imported files and categorizes them
+         */
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+
+            // Loading state in dropzone
+            const dropzoneLabel = dropZone.querySelector('p');
+            const originalLabelText = dropzoneLabel.innerHTML;
+            dropzoneLabel.innerHTML = `<span class="inline-block animate-pulse text-brand-400 font-bold"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Analisi ed elaborazione formati in corso...</span>`;
+
+            for (const file of Array.from(files)) {
+                const format = getFormatCategory(file.name);
+                const isSupported = format !== 'UNKNOWN' || file.type.match('image.*');
+                
+                if (!isSupported) continue;
+
+                if (format === 'TIFF') {
+                    try {
+                        const { canvas, count, ifds, arrayBuffer } = await getTiffCanvas(file);
+                        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+
+                        if (count > 1) {
+                            // Loop and extract each individual TIFF page
+                            for (let p = 0; p < count; p++) {
+                                UTIF.decodeImage(arrayBuffer, ifds[p]);
+                                const timage = ifds[p];
+                                const rgba = UTIF.toRGBA8(timage);
+                                
+                                const singlePageCanvas = document.createElement('canvas');
+                                singlePageCanvas.width = timage.width;
+                                singlePageCanvas.height = timage.height;
+                                const ctx = singlePageCanvas.getContext('2d');
+                                const imageData = new ImageData(new Uint8ClampedArray(rgba), timage.width, timage.height);
+                                ctx.putImageData(imageData, 0, 0);
+
+                                const previewBlob = await new Promise(resolve => singlePageCanvas.toBlob(resolve, 'image/png'));
+                                const previewUrl = URL.createObjectURL(previewBlob);
+
+                                const item = {
+                                    id: crypto.randomUUID(),
+                                    file: {
+                                        name: `${baseName}_pag_${p + 1}.tif`,
+                                        size: Math.round(file.size / count),
+                                    },
+                                    format: 'TIFF',
+                                    converted: false,
+                                    url: previewUrl,
+                                    resultBlob: null,
+                                    resultName: null,
+                                    isTiff: true,
+                                    tiffCanvas: singlePageCanvas,
+                                    pageIndex: p + 1,
+                                    pageCount: count
+                                };
+                                queue.push(item);
+                                renderItem(item);
+                            }
+                        } else {
+                            // Single Page TIFF
+                            const previewBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                            const previewUrl = URL.createObjectURL(previewBlob);
+
+                            const item = {
+                                id: crypto.randomUUID(),
+                                file,
+                                format: 'TIFF',
+                                converted: false,
+                                url: previewUrl,
+                                resultBlob: null,
+                                resultName: null,
+                                isTiff: true,
+                                tiffCanvas: canvas
+                            };
+                            queue.push(item);
+                            renderItem(item);
+                        }
+                    } catch (err) {
+                        console.error("Errore decodifica TIFF:", err);
+                        const item = {
+                            id: crypto.randomUUID(),
+                            file,
+                            format: 'TIFF',
+                            converted: false,
+                            url: `https://placehold.co/150x150/1e293b/94a3b8?text=TIFF+Errore`,
+                            resultBlob: null,
+                            resultName: null,
+                            isTiff: false,
+                            error: "Compressione TIFF non supportata in locale"
+                        };
+                        queue.push(item);
+                        renderItem(item);
+                    }
+                } 
+                else if (format === 'HEIC') {
+                    try {
+                        // Use heic2any to decode HEIC to JPEG/PNG Blob
+                        const heicResult = await heic2any({
+                            blob: file,
+                            toType: "image/png"
+                        });
+                        
+                        const subBlobs = Array.isArray(heicResult) ? heicResult : [heicResult];
+                        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+
+                        subBlobs.forEach((b, idx) => {
+                            const subFileName = subBlobs.length > 1 ? `${baseName}_burst_${idx+1}.heic` : file.name;
+                            const previewUrl = URL.createObjectURL(b);
+                            const item = {
+                                id: crypto.randomUUID(),
+                                file: {
+                                    name: subFileName,
+                                    size: Math.round(file.size / subBlobs.length)
+                                },
+                                format: 'HEIC',
+                                converted: false,
+                                url: previewUrl,
+                                rawBlob: b,
+                                isHeic: true,
+                                resultBlob: null,
+                                resultName: null
+                            };
+                            queue.push(item);
+                            renderItem(item);
+                        });
+
+                    } catch (err) {
+                        console.error("Errore decodifica HEIC:", err);
+                        const item = {
+                            id: crypto.randomUUID(),
+                            file,
+                            format: 'HEIC',
+                            converted: false,
+                            url: `https://placehold.co/150x150/1e293b/94a3b8?text=HEIC+Errore`,
+                            resultBlob: null,
+                            resultName: null,
+                            isHeic: false,
+                            error: "File HEIC non valido o impossibile da elaborare"
+                        };
+                        queue.push(item);
+                        renderItem(item);
+                    }
+                } 
+                else if (format === 'SVG') {
+                    try {
+                        const text = await file.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, "image/svg+xml");
+                        const svgElement = doc.documentElement;
+                        
+                        let width = parseFloat(svgElement.getAttribute("width"));
+                        let height = parseFloat(svgElement.getAttribute("height"));
+                        let viewBox = svgElement.getAttribute("viewBox");
+                        
+                        if (isNaN(width) || isNaN(height)) {
+                            if (viewBox) {
+                                const parts = viewBox.split(/\s+/).map(parseFloat);
+                                if (parts.length === 4) {
+                                    width = parts[2];
+                                    height = parts[3];
+                                }
+                            }
+                        }
+                        
+                        if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                            width = 1024;
+                            height = 1024; // Default fallback dimensions
+                        }
+                        
+                        const svgBlob = new Blob([text], { type: "image/svg+xml;charset=utf-8" });
+                        const previewUrl = URL.createObjectURL(svgBlob);
+                        
+                        const item = {
+                            id: crypto.randomUUID(),
+                            file,
+                            format: 'SVG',
+                            converted: false,
+                            url: previewUrl,
+                            isSvg: true,
+                            svgWidth: width,
+                            svgHeight: height,
+                            resultBlob: null,
+                            resultName: null
+                        };
+                        queue.push(item);
+                        renderItem(item);
+                    } catch (err) {
+                        console.error("Errore lettura SVG:", err);
+                    }
+                }
+                // Native images
+                else {
+                    const item = {
+                        id: crypto.randomUUID(),
+                        file,
+                        format: format !== 'UNKNOWN' ? format : 'NATIVO',
+                        converted: false,
+                        url: URL.createObjectURL(file),
+                        resultBlob: null,
+                        resultName: null
+                    };
+                    queue.push(item);
+                    renderItem(item);
+                }
+            }
+
+            // Restore dropzone label
+            dropzoneLabel.innerHTML = originalLabelText;
             updateGlobalUI();
         }
 
+        /**
+         * Dynamic renderer for file items in the container
+         */
         function renderItem(item) {
             const div = document.createElement('div');
-            div.className = 'preview-item';
+            div.className = 'flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-900/30 hover:bg-slate-900/55 rounded-2xl border border-slate-800/80 transition-all relative group';
             div.id = `item-${item.id}`;
+            div.dataset.format = item.format.toLowerCase();
+            div.dataset.converted = item.converted;
+
+            let badgeStyle = 'bg-slate-800 text-slate-300 border-slate-700';
+            let badgeText = item.format;
+
+            if (item.format === 'TIFF') {
+                badgeStyle = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                if (item.pageIndex) badgeText = `TIF • P.${item.pageIndex}/${item.pageCount}`;
+            } else if (item.format === 'HEIC') {
+                badgeStyle = 'bg-pink-500/10 text-pink-400 border-pink-500/20';
+            } else if (item.format === 'PNG') {
+                badgeStyle = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            } else if (item.format === 'JPEG') {
+                badgeStyle = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+            } else if (item.format === 'WEBP') {
+                badgeStyle = 'bg-violet-500/10 text-violet-400 border-violet-500/20';
+            } else if (item.format === 'BMP') {
+                badgeStyle = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            } else if (item.format === 'GIF') {
+                badgeStyle = 'bg-teal-500/10 text-teal-400 border-teal-500/20';
+            } else if (item.format === 'SVG') {
+                badgeStyle = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+            } else if (item.format === 'AVIF') {
+                badgeStyle = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            } else if (item.format === 'ICO') {
+                badgeStyle = 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+            }
+
+            const isHeavierText = item.format === 'GIF' ? ' (Statico)' : '';
+
             div.innerHTML = `
-                <img src="${item.url}">
-                <div class="file-info">
-                    <span class="file-name">${item.file.name}</span>
-                    <div class="file-meta">Original: ${(item.file.size/1024).toFixed(1)} KB</div>
+                <div class="flex items-center gap-4 w-full sm:w-auto min-w-0">
+                    <img src="${item.url}" class="w-14 h-14 object-cover rounded-xl border border-slate-850 bg-slate-950 flex-shrink-0" onerror="this.src='https://placehold.co/150x150/1e293b/94a3b8?text=Error'">
+                    <div class="min-w-0 space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded border ${badgeStyle} uppercase flex-shrink-0 font-mono">${badgeText}${isHeavierText}</span>
+                            <span class="file-name text-sm font-semibold text-slate-100 truncate block">${item.file.name}</span>
+                        </div>
+                        <div class="file-meta text-xs text-slate-500 font-mono">Originale: ${(item.file.size/1024).toFixed(1)} KB</div>
+                        ${item.error ? `<div class="text-[10px] text-red-400 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i>${item.error}</div>` : ''}
+                    </div>
                 </div>
-                <div class="actions">
-                    <button class="btn btn-primary" onclick="processFile('${item.id}')">Optimize</button>
+                <div class="actions flex items-center justify-end gap-2 w-full sm:w-auto">
+                    <button class="p-2 text-slate-500 hover:text-red-400 bg-slate-950/40 hover:bg-slate-900 rounded-lg transition" onclick="removeItem('${item.id}')" title="Rimuovi">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                    <button class="px-4 py-2 bg-slate-800 hover:bg-slate-755 text-slate-100 text-xs font-bold rounded-xl transition ${item.error ? 'hidden' : ''}" onclick="processFile('${item.id}')">Ottimizza</button>
                 </div>
             `;
             fileList.appendChild(div);
         }
 
+        /**
+         * Compression pipeline processing a single file using off-screen contexts
+         */
         async function processFile(id) {
             const item = queue.find(i => i.id === id);
-            if (!item || item.converted) return;
+            if (!item || item.converted || item.error) return;
 
             const div = document.getElementById(`item-${id}`);
             const meta = div.querySelector('.file-meta');
             const actions = div.querySelector('.actions');
 
-            const img = new Image();
-            img.src = item.url;
-            
-            try {
-                await img.decode();
-            } catch (e) {
-                console.error("Image loading error", e);
-                return;
+            actions.innerHTML = `
+                <div class="flex items-center gap-2 px-3 py-1.5 text-xs text-brand-400 bg-brand-500/5 rounded-xl border border-brand-500/10 font-medium">
+                    <i class="fa-solid fa-spinner text-brand-500 glow-spinner text-sm"></i>
+                    <span>Compressione...</span>
+                </div>
+            `;
+
+            let canvas;
+            let width;
+            let height;
+
+            if (item.isTiff) {
+                const tCanvas = item.tiffCanvas;
+                width = tCanvas.width;
+                height = tCanvas.height;
+
+                const maxW = parseInt(document.getElementById('maxWidth').value) || 1920;
+                const maxH = parseInt(document.getElementById('maxHeight').value) || 1920;
+
+                if (resizeToggle.checked && (width > maxW || height > maxH)) {
+                    const ratio = Math.min(maxW / width, maxH / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+
+                canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                // Paint transparency background values if required
+                applyBackground(ctx, width, height);
+                ctx.drawImage(tCanvas, 0, 0, width, height);
+
+            } else {
+                const img = new Image();
+                img.src = item.url;
+                try {
+                    await img.decode();
+                } catch (e) {
+                    console.error("Image decoding failed via Image object.", e);
+                    meta.innerHTML = `<span class="text-red-400 font-bold">Impossibile caricare immagine</span>`;
+                    return;
+                }
+
+                if (item.isSvg) {
+                    width = item.svgWidth;
+                    height = item.svgHeight;
+                } else {
+                    width = img.width;
+                    height = img.height;
+                }
+
+                const maxW = parseInt(document.getElementById('maxWidth').value) || 1920;
+                const maxH = parseInt(document.getElementById('maxHeight').value) || 1920;
+
+                if (resizeToggle.checked && (width > maxW || height > maxH)) {
+                    const ratio = Math.min(maxW / width, maxH / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+
+                canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                applyBackground(ctx, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
             }
-
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-
-            if (resizeToggle.checked && (width > 1920 || height > 1920)) {
-                const ratio = Math.min(1920 / width, 1920 / height);
-                width *= ratio;
-                height *= ratio;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, width, height);
 
             const quality = parseFloat(qualityRange.value);
-            
+
             return new Promise((resolve) => {
                 canvas.toBlob((blob) => {
-                    const resultName = item.file.name.split('.')[0] + ".webp";
+                    let baseName = item.file.name;
                     
+                    // Standard ext removal
+                    const lastDot = baseName.lastIndexOf('.');
+                    if (lastDot !== -1) {
+                        baseName = baseName.substring(0, lastDot);
+                    }
+
+                    // Apply Prefix / Suffix
+                    const pfx = namePrefix.value.trim();
+                    const sfx = nameSuffix.value.trim();
+                    const resultName = pfx + baseName + sfx + ".webp";
+
                     item.converted = true;
                     item.resultBlob = blob;
                     item.resultName = resultName;
 
-                    const reduction = (((item.file.size - blob.size) / item.file.size) * 100).toFixed(1);
-                    const isLighter = blob.size < item.file.size;
+                    // Update UI dataset for filtering
+                    div.dataset.converted = "true";
+
+                    const savingsPct = (((item.file.size - blob.size) / item.file.size) * 100).toFixed(1);
+                    const hasSavedSpace = blob.size < item.file.size;
 
                     meta.innerHTML = `
-                        Orig: ${(item.file.size/1024).toFixed(1)} KB → 
-                        <b>WebP: ${(blob.size/1024).toFixed(1)} KB</b><br>
-                        <span class="${isLighter ? 'reduction-positive' : 'reduction-negative'}">
-                            ${isLighter ? 'Savings: -' + reduction + '%' : 'Warning: file is heavier!'}
-                        </span>
+                        <div class="space-y-0.5 font-mono">
+                            <div class="text-[10px] text-slate-500">Originale: ${(item.file.size/1024).toFixed(1)} KB</div>
+                            <div class="font-extrabold text-emerald-400 text-xs">WebP: ${(blob.size/1024).toFixed(1)} KB</div>
+                        </div>
                     `;
 
-                    // Create a temporary URL for single download if needed
                     const singleUrl = URL.createObjectURL(blob);
+                    const badgeClass = hasSavedSpace 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                    const badgeText = hasSavedSpace 
+                        ? `-${savingsPct}%` 
+                        : '+ Heavier';
+
                     actions.innerHTML = `
-                        <a href="${singleUrl}" download="${resultName}" class="btn btn-success">Download</a>
+                        <span class="text-[10px] px-2 py-1 rounded-lg border font-bold font-mono ${badgeClass}">${badgeText}</span>
+                        <a href="${singleUrl}" download="${resultName}" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-down-long"></i> Scarica
+                        </a>
                     `;
-                    
+
                     updateGlobalUI();
                     resolve();
                 }, 'image/webp', quality);
             });
         }
 
+        /**
+         * Fills transparency on the processing context
+         */
+        function applyBackground(ctx, w, h) {
+            const tOption = alphaOption.value;
+            if (tOption === 'white') {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, w, h);
+            } else if (tOption === 'black') {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, w, h);
+            } else if (tOption === 'custom') {
+                ctx.fillStyle = customColorText.value || '#6366f1';
+                ctx.fillRect(0, 0, w, h);
+            }
+        }
+
+        /**
+         * Clears specific items and handles transitions
+         */
         window.removeItem = (id) => {
             const item = queue.find(i => i.id === id);
             if (item) {
                 URL.revokeObjectURL(item.url);
+                if (item.resultBlob) {
+                    URL.revokeObjectURL(item.resultBlob);
+                }
             }
             queue = queue.filter(i => i.id !== id);
-            document.getElementById(`item-${id}`).remove();
-            updateGlobalUI();
+            
+            const element = document.getElementById(`item-${id}`);
+            if (element) {
+                element.style.opacity = '0';
+                element.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    element.remove();
+                    updateGlobalUI();
+                }, 200);
+            }
         };
 
+        /**
+         * Sequential full compression caller
+         */
         convertAllBtn.onclick = async () => {
             convertAllBtn.disabled = true;
-            convertAllBtn.textContent = "Processing...";
-            const toProcess = queue.filter(i => !i.converted);
-            for (const item of toProcess) {
+            const originalContent = convertAllBtn.innerHTML;
+            convertAllBtn.innerHTML = `
+                <i class="fa-solid fa-spinner animate-spin mr-1"></i>
+                <span>Elaborazione Coda...</span>
+            `;
+
+            // Process only files matching current visual filter OR all non-converted pending ones
+            const filterValue = queueFilter.value;
+            let pending = [];
+            
+            if (filterValue === 'pending') {
+                pending = queue.filter(i => !i.converted && !i.error);
+            } else {
+                pending = queue.filter(i => !i.converted && !i.error);
+            }
+
+            for (const item of pending) {
                 await processFile(item.id);
             }
+
             convertAllBtn.disabled = false;
-            convertAllBtn.textContent = "Optimize All";
+            convertAllBtn.innerHTML = originalContent;
+            filterQueueDisplay(); // Re-apply current active filters if any
         };
 
-        // DOWNLOAD ZIP FUNCTION
+        /**
+         * Package optimized WebP files to local ZIP structure
+         */
         downloadZipBtn.onclick = async () => {
-            const convertedItems = queue.filter(i => i.converted && i.resultBlob);
-            if (convertedItems.length === 0) return;
+            const converted = queue.filter(i => i.converted && i.resultBlob);
+            if (converted.length === 0) return;
 
             const originalContent = downloadZipBtn.innerHTML;
             downloadZipBtn.disabled = true;
-            downloadZipBtn.innerHTML = '<div class="loading-spinner"></div><span>Creating ZIP...</span>';
+            downloadZipBtn.innerHTML = `
+                <i class="fa-solid fa-spinner animate-spin"></i>
+                <span>Generazione archivio ZIP...</span>
+            `;
 
             try {
                 const zip = new JSZip();
-                
-                // Add each WebP file to the zip
-                convertedItems.forEach(item => {
+                converted.forEach(item => {
                     zip.file(item.resultName, item.resultBlob);
                 });
 
-                // Generate archive
                 const content = await zip.generateAsync({ type: "blob" });
                 
-                // Download archive
-                const zipName = "optimized_webp_images.zip";
+                const zipName = "Immagini_Ottimizzate_WebP.zip";
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
                 link.download = zipName;
@@ -432,24 +980,99 @@
                 document.body.removeChild(link);
 
             } catch (err) {
-                console.error("ZIP creation error:", err);
+                console.error("Compilazione dell'archivio ZIP fallita:", err);
             } finally {
                 downloadZipBtn.disabled = false;
                 downloadZipBtn.innerHTML = originalContent;
             }
         };
 
+        // Empty entire queue
         clearAllBtn.onclick = () => {
-            queue.forEach(item => URL.revokeObjectURL(item.url));
+            queue.forEach(item => {
+                URL.revokeObjectURL(item.url);
+                if (item.resultBlob) URL.revokeObjectURL(item.resultBlob);
+            });
             queue = [];
             fileList.innerHTML = '';
             updateGlobalUI();
         };
 
+        /**
+         * Filters visible items in the GUI list
+         */
+        function filterQueueDisplay() {
+            const val = queueFilter.value;
+            const items = fileList.children;
+            
+            for (let item of items) {
+                const isConverted = item.dataset.converted === "true";
+                if (val === 'all') {
+                    item.classList.remove('hidden');
+                } else if (val === 'pending') {
+                    if (!isConverted) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                } else if (val === 'converted') {
+                    if (isConverted) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                }
+            }
+        }
+
+        /**
+         * Recalculates statistics and sets layout configurations
+         */
         function updateGlobalUI() {
-            globalActions.classList.toggle('hidden', queue.length === 0);
-            const hasConverted = queue.some(i => i.converted);
-            downloadZipBtn.classList.toggle('hidden', !hasConverted);
+            const size = queue.length;
+            
+            // Queue view visibility states
+            emptyState.classList.toggle('hidden', size !== 0);
+            actionFooter.classList.toggle('hidden', size === 0);
+            statsPanel.classList.toggle('hidden', size === 0);
+            statsPanel.classList.toggle('grid', size !== 0);
+            queueCountBadge.classList.toggle('hidden', size === 0);
+            queueFilterActions.classList.toggle('hidden', size === 0);
+            queueCountBadge.textContent = size;
+
+            if (size > 0) {
+                let origTotal = 0;
+                let optTotal = 0;
+                let convertedCount = 0;
+
+                queue.forEach(item => {
+                    origTotal += item.file.size;
+                    if (item.converted && item.resultBlob) {
+                        optTotal += item.resultBlob.size;
+                        convertedCount++;
+                    } else {
+                        optTotal += item.file.size;
+                    }
+                });
+
+                statTotalCount.querySelector('.value').textContent = size;
+                statOriginalSize.textContent = (origTotal / 1024).toFixed(1) + " KB";
+                
+                if (convertedCount > 0) {
+                    statNewSize.textContent = (optTotal / 1024).toFixed(1) + " KB";
+                    const savedPct = (((origTotal - optTotal) / origTotal) * 100).toFixed(1);
+                    statSavings.textContent = (origTotal > optTotal) ? `-${savedPct}%` : '0%';
+                } else {
+                    statNewSize.textContent = "---";
+                    statSavings.textContent = "---";
+                }
+
+                // ZIP download available if at least one file is processed
+                const hasConverted = queue.some(i => i.converted);
+                downloadZipBtn.classList.toggle('hidden', !hasConverted);
+            }
+            
+            filterQueueDisplay();
         }
     </script>
 </body>
